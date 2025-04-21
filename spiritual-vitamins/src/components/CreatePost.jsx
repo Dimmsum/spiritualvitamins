@@ -1,19 +1,68 @@
 // src/components/CreatePost.jsx
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { v4 as uuidv4 } from 'uuid';
+import { Upload, X } from 'lucide-react';
 
-function CreatePost() {
+function CreatePost({ initialData = null, onPostSaved }) {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
+  const fileInputRef = useRef(null);
+  const isEditing = !!initialData;
+
+  // Set initial data if provided (for editing mode)
+  useEffect(() => {
+    if (initialData) {
+      setTitle(initialData.title || '');
+      setContent(initialData.content || '');
+      
+      if (initialData.image_url) {
+        setImagePreview(initialData.image_url);
+      }
+    }
+  }, [initialData]);
 
   // Handle image selection
   function handleImageChange(e) {
     const file = e.target.files[0];
     if (!file) return;
+    
+    handleFile(file);
+  }
+
+  // Handle drag events
+  function handleDrag(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  }
+
+  // Handle drop event
+  function handleDrop(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFile(e.dataTransfer.files[0]);
+    }
+  }
+
+  // Process the file
+  function handleFile(file) {
+    if (!file.type.match('image.*')) {
+      alert('Please select an image file');
+      return;
+    }
     
     setImage(file);
     
@@ -23,6 +72,17 @@ function CreatePost() {
       setImagePreview(reader.result);
     };
     reader.readAsDataURL(file);
+  }
+
+  // Clear image selection
+  function clearImage() {
+    setImage(null);
+    setImagePreview(null);
+  }
+
+  // Open file dialog
+  function openFileDialog() {
+    fileInputRef.current.click();
   }
 
   async function handleSubmit(e) {
@@ -36,9 +96,9 @@ function CreatePost() {
         throw new Error('You must be logged in to create a post');
       }
       
-      let imageUrl = null;
+      let imageUrl = initialData?.image_url || null;
       
-      // If an image was selected, upload it first
+      // If a new image was selected, upload it
       if (image) {
         const fileExt = image.name.split('.').pop();
         const fileName = `${uuidv4()}.${fileExt}`;
@@ -61,19 +121,37 @@ function CreatePost() {
         imageUrl = data.publicUrl;
       }
       
-      // Insert the post with the image URL
-      const { error } = await supabase
-        .from('posts')
-        .insert([
-          { 
+      if (isEditing) {
+        // Update existing post
+        const { error } = await supabase
+          .from('posts')
+          .update({ 
             title, 
             content, 
             image_url: imageUrl,
-            author_id: user.id
-          }
-        ]);
-      
-      if (error) throw error;
+          })
+          .eq('id', initialData.id);
+        
+        if (error) throw error;
+        
+        alert('Vitamin updated successfully!');
+      } else {
+        // Insert new post
+        const { error } = await supabase
+          .from('posts')
+          .insert([
+            { 
+              title, 
+              content, 
+              image_url: imageUrl,
+              author_id: user.id
+            }
+          ]);
+        
+        if (error) throw error;
+        
+        alert('Vitamin created successfully!');
+      }
       
       // Reset form fields
       setTitle('');
@@ -81,9 +159,13 @@ function CreatePost() {
       setImage(null);
       setImagePreview(null);
       
-      alert('Post created successfully!');
+      // Call the callback if provided
+      if (onPostSaved) {
+        onPostSaved();
+      }
+      
     } catch (error) {
-      alert('Error creating post: ' + error.message);
+      alert(`Error ${isEditing ? 'updating' : 'creating'} vitamin: ` + error.message);
     } finally {
       setLoading(false);
     }
@@ -91,8 +173,6 @@ function CreatePost() {
 
   return (
     <div className="w-full px-4 py-6 bg-white">
-      <h1 className="text-xl font-bold text-center mb-6">Create New Spiritual Vitamin</h1>
-      
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
           <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
@@ -125,25 +205,54 @@ function CreatePost() {
         </div>
         
         <div>
-          <label htmlFor="image" className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
             Image
           </label>
+          
+          {/* Hidden file input */}
           <input
-            id="image"
+            ref={fileInputRef}
+            id="image-upload"
             type="file"
             accept="image/*"
             onChange={handleImageChange}
-            className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-red-500/70 hover:file:bg-red-100"
+            className="hidden"
           />
           
-          {/* Image preview */}
-          {imagePreview && (
-            <div className="mt-3">
+          {/* Drag and drop area or image preview */}
+          {!imagePreview ? (
+            <div 
+              className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
+                dragActive ? 'border-red-400 bg-red-50' : 'border-gray-300 hover:border-red-300 hover:bg-red-50/30'
+              }`}
+              onClick={openFileDialog}
+              onDragEnter={handleDrag}
+              onDragLeave={handleDrag}
+              onDragOver={handleDrag}
+              onDrop={handleDrop}
+            >
+              <Upload className="mx-auto h-10 w-10 text-gray-400" />
+              <p className="mt-2 text-sm text-gray-600">
+                Drag and drop an image here, or click to select
+              </p>
+              <p className="mt-1 text-xs text-gray-500">
+                PNG, JPG, GIF up to 10MB
+              </p>
+            </div>
+          ) : (
+            <div className="relative rounded-lg overflow-hidden">
               <img 
                 src={imagePreview} 
                 alt="Preview" 
-                className="w-full h-40 object-cover rounded-md"
+                className="w-full h-48 object-cover rounded-md"
               />
+              <button 
+                type="button"
+                onClick={clearImage}
+                className="absolute top-2 right-2 p-1 bg-white rounded-full shadow-md hover:bg-red-50"
+              >
+                <X size={20} className="text-red-500" />
+              </button>
             </div>
           )}
         </div>
@@ -154,7 +263,10 @@ function CreatePost() {
             disabled={loading}
             className="w-full py-3 bg-red-500/70 hover:bg-red-600/90 text-white font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50"
           >
-            {loading ? 'Creating...' : 'Create Spiritual Vitamin'}
+            {loading 
+              ? (isEditing ? 'Updating...' : 'Creating...') 
+              : (isEditing ? 'Update Spiritual Vitamin' : 'Create Spiritual Vitamin')
+            }
           </button>
         </div>
       </form>

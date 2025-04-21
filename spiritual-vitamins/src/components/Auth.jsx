@@ -32,8 +32,8 @@ function Auth() {
     
     setLoading(true);
     try {
-      // Standard signup
-      const { data, error } = await supabase.auth.signUp({
+      // Standard signup - destructure just the error to avoid unused 'data' variable
+      const { error } = await supabase.auth.signUp({
         email,
         password,
       });
@@ -63,7 +63,8 @@ function Auth() {
     setLoading(true);
     
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      // Destructure just the error to avoid unused 'data' variable
+      const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
