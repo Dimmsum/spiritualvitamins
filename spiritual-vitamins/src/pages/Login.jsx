@@ -1,10 +1,16 @@
+// src/pages/Login.jsx
+import React from 'react';
+import Auth from '../components/Auth';
+import Header from '../components/Header';
 
-
-const Login=()=>{
-    return(
+const Login = () => {
+  return (
     <>
-    <h1>Login</h1>
-    
-    </>);
-}
-export default Login
+      <Header />
+        <Auth />
+
+    </>
+  );
+};
+
+export default Login;
