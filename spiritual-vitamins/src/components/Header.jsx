@@ -2,7 +2,7 @@ import React from 'react';
 
 const Header = () => {
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 py-4 px-6 bg-white bg-opacity-80 backdrop-blur-sm shadow-md">
+    <header className=" top-0 left-0 right-0 z-50 py-4 px-6 bg-white bg-opacity-80 backdrop-blur-sm shadow-md">
       <div className="container mx-auto flex justify-between items-center">
         <div className="w-1/3">
           {/* Left section - empty for now */}
