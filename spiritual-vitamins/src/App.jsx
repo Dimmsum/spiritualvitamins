@@ -5,7 +5,7 @@ import Signup from './pages/Signup'
 import Login from './pages/Login'
 import Posts from './pages/Posts'
 import ManageVitamins from './pages/ManagePosts'
-
+import PostDetails from './pages/PostDetails';
 
 
 
@@ -20,6 +20,7 @@ function App() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/vitamins" element={<Posts />} />
           <Route path="/manage-vitamins" element={<ManageVitamins />} />
+          <Route path="/vitamins/:id/:slug" element={<PostDetails />} />
           {/* Add more routes as needed */}
         </Routes>
     </Router>

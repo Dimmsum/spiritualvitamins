@@ -1,5 +1,5 @@
-// src/pages/ManageVitamins.jsx
-import { useState, useEffect } from "react";
+// src/pages/ManagePosts.jsx
+import { useState, useEffect, useCallback } from "react";
 import CreatePost from "../components/CreatePost";
 import PostsList from "../components/PostsList";
 import Header from "../components/Header";
@@ -8,6 +8,7 @@ const ManageVitamins = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [editingPost, setEditingPost] = useState(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0); // Add this state to trigger refreshes
 
   // Add scroll listener to improve performance by only showing certain elements when needed
   useEffect(() => {
@@ -28,11 +29,14 @@ const ManageVitamins = () => {
   };
 
   // Handle successful post creation or update
-  const handlePostSaved = () => {
+  const handlePostSaved = useCallback(() => {
     // Reset editing state and hide form
     setEditingPost(null);
     setShowCreateForm(false);
-  };
+    
+    // Trigger a refresh of the posts list
+    setRefreshTrigger(prev => prev + 1);
+  }, []);
 
   // Form title based on whether we're editing or creating
   const formTitle = editingPost ? 'Edit Spiritual Vitamin' : 'Create New Spiritual Vitamin';
@@ -76,7 +80,12 @@ const ManageVitamins = () => {
           )}
           
           <div className="mt-8">
-            <PostsList onEditPost={handleEditPost} />
+            {/* Pass refreshTrigger as key to force re-render when posts are modified */}
+            <PostsList 
+              key={refreshTrigger} 
+              onEditPost={handleEditPost} 
+              onPostDeleted={handlePostSaved} 
+            />
           </div>
         </div>
         

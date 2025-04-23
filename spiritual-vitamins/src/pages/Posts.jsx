@@ -1,10 +1,12 @@
-// src/pages/AllVitamins.jsx
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import Header from '../components/Header';
 import SearchBar from '../components/SearchBar';
+import { generateSlug } from '../utils/helpers';
 
 const Posts = () => {
+  const navigate = useNavigate();
   const [vitamins, setVitamins] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -100,6 +102,12 @@ const Posts = () => {
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
+  // Navigate to post details
+  const navigateToVitamin = (vitamin) => {
+    const slug = generateSlug(vitamin.title);
+    navigate(`/vitamins/${vitamin.id}/${slug}`);
+  };
+
   return (
     <>
       <Header />
@@ -133,7 +141,8 @@ const Posts = () => {
           {filteredVitamins.map(vitamin => (
             <div 
               key={vitamin.id} 
-              className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300"
+              className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 cursor-pointer"
+              onClick={() => navigateToVitamin(vitamin)}
             >
               {vitamin.image_url ? (
                 <div className="w-full h-48 overflow-hidden bg-gray-100">

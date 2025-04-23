@@ -1,9 +1,11 @@
-// src/components/PostsList.jsx
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { Trash2, Edit2 } from 'lucide-react';
+import { generateSlug } from '../utils/helpers';
 
 function PostsList({ onEditPost }) {
+  const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
@@ -76,6 +78,12 @@ function PostsList({ onEditPost }) {
     }
   }
 
+  // Navigate to post details page
+  function navigateToPost(post) {
+    const slug = generateSlug(post.title);
+    navigate(`/vitamins/${post.id}/${slug}`);
+  }
+
   // Load more posts
   const loadMore = () => {
     setPage(prevPage => prevPage + 1);
@@ -106,7 +114,8 @@ function PostsList({ onEditPost }) {
         {posts.map(post => (
           <div 
             key={post.id} 
-            className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300"
+            className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 cursor-pointer"
+            onClick={() => navigateToPost(post)}
           >
             {/* Image Section */}
             {post.image_url ? (
