@@ -111,7 +111,7 @@ const Posts = () => {
   return (
     <>
       <Header />
-      <div className="mt-24 px-4 pb-10 max-w-6xl mx-auto">
+      <div className="mt-10 px-4 pb-10 max-w-6xl mx-auto">
         <h1 className="text-2xl font-bold text-center mb-6 text-[#FF2C2C]">All Your Vitamins</h1>
         
         {/* Search bar section */}

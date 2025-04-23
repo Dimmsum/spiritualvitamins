@@ -4,6 +4,8 @@ import { supabase } from '../lib/supabaseClient';
 import Header from '../components/Header';
 import { ArrowLeft } from 'lucide-react';
 import { getPostIdFromParams } from '../utils/helpers';
+import LikeButton from '../components/LikeButton';
+import CommentSection from '../components/CommentSection';
 
 const PostDetails = () => {
   const params = useParams();
@@ -54,7 +56,7 @@ const PostDetails = () => {
   return (
     <>
       <Header />
-      <div className="mt-24 px-4 pb-10 max-w-4xl mx-auto">
+      <div className="mt-10 px-4 pb-10 max-w-4xl mx-auto">
         {/* Back button */}
         <button 
           onClick={goBack}
@@ -102,8 +104,9 @@ const PostDetails = () => {
             <div className="p-6 sm:p-8">
               <h1 className="text-3xl font-bold text-gray-800 mb-4">{post.title}</h1>
               
-              <div className="text-gray-500 mb-6">
-                <time dateTime={post.created_at}>{formatDate(post.created_at)}</time>
+              <div className="flex justify-between items-center mb-6">
+                <time className="text-gray-500" dateTime={post.created_at}>{formatDate(post.created_at)}</time>
+                <LikeButton postId={post.id} />
               </div>
               
               {/* Render content with proper paragraph breaks */}
@@ -112,6 +115,9 @@ const PostDetails = () => {
                   paragraph ? <p key={index} className="mb-4">{paragraph}</p> : <br key={index} />
                 ))}
               </div>
+              
+              {/* Comments section */}
+              <CommentSection postId={post.id} />
             </div>
           </div>
         )}
