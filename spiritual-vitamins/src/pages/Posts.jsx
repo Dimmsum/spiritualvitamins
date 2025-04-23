@@ -111,8 +111,9 @@ const Posts = () => {
   return (
     <>
       <Header />
+      <div className = "bg-[#FF2C2C] pt-10">
       <div className="mt-10 px-4 pb-10 max-w-6xl mx-auto">
-        <h1 className="text-2xl font-bold text-center mb-6 text-[#FF2C2C]">All Your Vitamins</h1>
+        <h1 className="text-2xl font-bold text-center text-white">All Your Vitamins</h1>
         
         {/* Search bar section */}
         <div className="mb-8">
@@ -193,6 +194,7 @@ const Posts = () => {
             <p className="text-gray-500">Loading more vitamins...</p>
           </div>
         )}
+      </div>
       </div>
     </>
   );
