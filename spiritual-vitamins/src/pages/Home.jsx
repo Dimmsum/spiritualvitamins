@@ -95,13 +95,12 @@ const Home = () => {
   return (
     <>
       <Header />
-      <main className="pt-24 pb-10">
+      <main className="pb-10">
         {/* Hero Section */}
         <section className="bg-gradient-to-r from-red-50 to-red-100 py-16 px-4 mb-10">
           <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-bold text-[#FF2C2C] mb-4">Daily Spiritual Vitamins</h1>
-            <p className="text-xl text-gray-700 mb-8">Nourishment for your soul, one vitamin at a time.</p>
-            <SearchBar />
+            <h1 className="text-4xl md:text-3xl font-bold text-[#FF2C2C] mb-4">For I know the plans I have for you,' declares the Lord, 'plans to prosper you and not to harm you, plans to give you a hope and a future</h1>
+            <p className="text-xl text-gray-700 mb-8">Jeremiah 9:11</p>
           </div>
         </section>
 
