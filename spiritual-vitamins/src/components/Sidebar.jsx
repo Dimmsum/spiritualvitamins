@@ -43,15 +43,13 @@ const Sidebar = ({ isOpen, onClose }) => {
   const menuLinks = [
     { to: '/', label: 'Home', icon: <Home size={20} /> },
     { to: '/vitamins', label: 'All Vitamins', icon: <BookOpen size={20} /> },
-    { to: '/categories', label: 'Categories', icon: <Heart size={20} /> },
-    { to: '/about', label: 'About Us', icon: <User size={20} /> },
-    { to: '/contact', label: 'Contact', icon: <Mail size={20} /> },
+    { to: '/about', label: 'About Me', icon: <User size={20} /> },
   ];
 
   // Admin/Auth links
   const authLinks = [
     { to: '/login', label: 'Sign In', icon: <LogIn size={20} /> },
-    { to: '/manage', label: 'Manage Vitamins', icon: <PlusCircle size={20} /> },
+    { to: '/manage-vitamins', label: 'Manage Vitamins', icon: <PlusCircle size={20} /> },
   ];
 
   return (

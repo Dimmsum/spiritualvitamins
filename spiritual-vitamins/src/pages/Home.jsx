@@ -129,8 +129,8 @@ const Home = () => {
                     Explore Vitamins
                     <ArrowRight size={18} className="ml-2" />
                   </button>
-                  <button className="px-8 py-3 bg-red-700/30 text-white border border-white/30 rounded-full font-medium hover:bg-red-700/50 transition-all duration-300">
-                    Learn More
+                  <button className="px-8 py-3 bg-red-700/30 text-white border border-white/30 rounded-full font-medium hover:bg-red-700/50 transition-all duration-300" onClick={() => navigate('/about')}>
+                    Learn More About Me
                   </button>
                 </div>
               </div>
