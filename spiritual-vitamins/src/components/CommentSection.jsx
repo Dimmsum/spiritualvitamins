@@ -8,6 +8,7 @@ const CommentSection = ({ postId }) => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [user, setUser] = useState(null);
+  const [userEmails, setUserEmails] = useState({});
   const navigate = useNavigate();
 
   // Check if user is logged in
@@ -40,20 +41,44 @@ const CommentSection = ({ postId }) => {
       try {
         setLoading(true);
         
+        // Fetch comments without the join
         const { data, error } = await supabase
           .from('comments')
           .select(`
             id, 
             content, 
             created_at, 
-            user_id,
-            users:user_id (email)
+            user_id
           `)
           .eq('post_id', postId)
           .order('created_at', { ascending: false });
         
         if (error) throw error;
+        
+        // Set comments
         setComments(data || []);
+        
+        // Get unique user IDs from comments
+        const userIds = [...new Set(data.map(comment => comment.user_id))];
+        
+        // Fetch user emails separately if there are user IDs
+        if (userIds.length > 0) {
+          const { data: userData, error: userError } = await supabase
+            .from('users')
+            .select('id, email')
+            .in('id', userIds);
+            
+          if (!userError && userData) {
+            // Create a map of user IDs to emails
+            const emailMap = {};
+            userData.forEach(user => {
+              emailMap[user.id] = user.email;
+            });
+            setUserEmails(emailMap);
+          } else {
+            console.error('Error fetching user emails:', userError?.message);
+          }
+        }
       } catch (error) {
         console.error('Error fetching comments:', error.message);
       } finally {
@@ -81,6 +106,7 @@ const CommentSection = ({ postId }) => {
     try {
       setSubmitting(true);
       
+      // Insert comment
       const { data, error } = await supabase
         .from('comments')
         .insert([
@@ -90,18 +116,20 @@ const CommentSection = ({ postId }) => {
             user_id: user.id
           }
         ])
-        .select(`
-          id, 
-          content, 
-          created_at, 
-          user_id,
-          users:user_id (email)
-        `);
+        .select();
       
       if (error) throw error;
       
       // Add the new comment to the list
       if (data && data.length > 0) {
+        // Add the current user's email to the userEmails map if not already there
+        if (!userEmails[user.id] && user.email) {
+          setUserEmails(prev => ({
+            ...prev,
+            [user.id]: user.email
+          }));
+        }
+        
         setComments([data[0], ...comments]);
       }
       
@@ -123,7 +151,7 @@ const CommentSection = ({ postId }) => {
 
   // Get user display name (email)
   const getUserDisplayName = (comment) => {
-    return comment.users?.email || 'Anonymous';
+    return userEmails[comment.user_id] || 'Anonymous';
   };
 
   return (
