@@ -12,6 +12,17 @@ const AboutPage = () => {
           <div className="w-16 h-1 bg-[#FF2C2C] mx-auto mt-4"></div>
         </div>
         
+        {/* Profile Image - Added Here */}
+        <div className="flex justify-center mb-8">
+          <div className="w-48 h-48 rounded-full overflow-hidden border-4 border-[#FF2C2C] shadow-lg">
+            <img 
+              src="/racquelLee.jpg" 
+              alt="Racquel Ricketts-Lee" 
+              className="w-full h-full object-cover object-top" 
+            />
+          </div>
+        </div>
+        
         {/* Author Info Section */}
         <div className="mb-10 text-center">
           <h3 className="text-2xl font-semibold text-gray-800 mb-1">Racquel Ricketts-Lee</h3>
