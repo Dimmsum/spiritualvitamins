@@ -1,277 +1,287 @@
-// src/components/CreatePost.jsx
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import { v4 as uuidv4 } from 'uuid';
-import { Upload, X } from 'lucide-react';
+import { Upload, Save, X, AlertTriangle, Loader } from 'lucide-react';
 
-function CreatePost({ initialData = null, onPostSaved }) {
+const CreatePost = ({ initialData = null, onPostSaved }) => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [image, setImage] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
+  const [imageUrl, setImageUrl] = useState('');
+  const [imageFile, setImageFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState('');
   const [loading, setLoading] = useState(false);
-  const [dragActive, setDragActive] = useState(false);
-  const fileInputRef = useRef(null);
-  const isEditing = !!initialData;
+  const [errorMessage, setErrorMessage] = useState('');
+  const [characterCount, setCharacterCount] = useState(0);
+  const maxCharacters = 1500; // Content character limit
 
-  // Set initial data if provided (for editing mode)
+  // Reset form or fill with initialData if editing
   useEffect(() => {
     if (initialData) {
       setTitle(initialData.title || '');
       setContent(initialData.content || '');
-      
-      if (initialData.image_url) {
-        setImagePreview(initialData.image_url);
-      }
+      setImageUrl(initialData.image_url || '');
+      setPreviewUrl(initialData.image_url || '');
+      setCharacterCount(initialData.content?.length || 0);
+    } else {
+      resetForm();
     }
   }, [initialData]);
 
-  // Handle image selection
-  function handleImageChange(e) {
+  // Handle image file selection
+  const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    
-    handleFile(file);
-  }
 
-  // Handle drag events
-  function handleDrag(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
-    } else if (e.type === "dragleave") {
-      setDragActive(false);
-    }
-  }
-
-  // Handle drop event
-  function handleDrop(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-    
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFile(e.dataTransfer.files[0]);
-    }
-  }
-
-  // Process the file
-  function handleFile(file) {
-    if (!file.type.match('image.*')) {
-      alert('Please select an image file');
+    // Validate file type
+    const fileTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!fileTypes.includes(file.type)) {
+      setErrorMessage('Please select an image file (JPEG, PNG, GIF, or WEBP)');
       return;
     }
-    
-    setImage(file);
-    
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setErrorMessage('Image file is too large. Maximum size is 5MB.');
+      return;
+    }
+
+    setErrorMessage('');
+    setImageFile(file);
+
     // Create a preview URL
     const reader = new FileReader();
-    reader.onload = () => {
-      setImagePreview(reader.result);
+    reader.onloadend = () => {
+      setPreviewUrl(reader.result);
     };
     reader.readAsDataURL(file);
-  }
+  };
 
-  // Clear image selection
-  function clearImage() {
-    setImage(null);
-    setImagePreview(null);
-  }
-
-  // Open file dialog
-  function openFileDialog() {
-    fileInputRef.current.click();
-  }
-
-  async function handleSubmit(e) {
+  // Handle form submission
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setErrorMessage('');
+
     try {
-      setLoading(true);
-      // Get the current user
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        throw new Error('You must be logged in to create a post');
+      // Validate form
+      if (!title.trim()) {
+        throw new Error('Please enter a title for your spiritual vitamin');
       }
       
-      let imageUrl = initialData?.image_url || null;
-      
-      // If a new image was selected, upload it
-      if (image) {
-        const fileExt = image.name.split('.').pop();
-        const fileName = `${uuidv4()}.${fileExt}`;
-        const filePath = `post-images/${fileName}`;
-        
-        // Upload the image to Supabase Storage
-        const { error: uploadError } = await supabase
-          .storage
-          .from('images')
-          .upload(filePath, image);
-          
-        if (uploadError) throw uploadError;
-        
-        // Get the public URL
-        const { data } = supabase
-          .storage
-          .from('images')
-          .getPublicUrl(filePath);
-          
-        imageUrl = data.publicUrl;
+      if (!content.trim()) {
+        throw new Error('Please enter content for your spiritual vitamin');
       }
-      
-      if (isEditing) {
+
+      // Handle image upload if there's a new image
+      let uploadedImageUrl = imageUrl;
+      if (imageFile) {
+        const fileName = `vitamin-${Date.now()}-${imageFile.name}`;
+        const { error: uploadError } = await supabase.storage
+          .from('vitamin-images')
+          .upload(fileName, imageFile);
+
+        if (uploadError) throw new Error(`Error uploading image: ${uploadError.message}`);
+
+        // Get the public URL for the uploaded image
+        const { data: { publicUrl } } = supabase.storage
+          .from('vitamin-images')
+          .getPublicUrl(fileName);
+
+        uploadedImageUrl = publicUrl;
+      }
+
+      // Determine if creating new or updating existing
+      if (initialData) {
         // Update existing post
-        const { error } = await supabase
+        const { error: updateError } = await supabase
           .from('posts')
-          .update({ 
-            title, 
-            content, 
-            image_url: imageUrl,
+          .update({
+            title: title.trim(),
+            content: content.trim(),
+            image_url: uploadedImageUrl,
+            updated_at: new Date().toISOString()
           })
           .eq('id', initialData.id);
-        
-        if (error) throw error;
-        
-        alert('Vitamin updated successfully!');
+
+        if (updateError) throw new Error(`Error updating vitamin: ${updateError.message}`);
       } else {
-        // Insert new post
-        const { error } = await supabase
+        // Create new post
+        const { error: insertError } = await supabase
           .from('posts')
-          .insert([
-            { 
-              title, 
-              content, 
-              image_url: imageUrl,
-              author_id: user.id
-            }
-          ]);
-        
-        if (error) throw error;
-        
-        alert('Vitamin created successfully!');
+          .insert([{
+            title: title.trim(),
+            content: content.trim(),
+            image_url: uploadedImageUrl,
+          }]);
+
+        if (insertError) throw new Error(`Error creating vitamin: ${insertError.message}`);
       }
-      
-      // Reset form fields
-      setTitle('');
-      setContent('');
-      setImage(null);
-      setImagePreview(null);
-      
-      // Call the callback if provided
+
+      // Reset form and notify parent component
+      resetForm();
       if (onPostSaved) {
         onPostSaved();
       }
-      
     } catch (error) {
-      alert(`Error ${isEditing ? 'updating' : 'creating'} vitamin: ` + error.message);
+      console.error('Error saving post:', error.message);
+      setErrorMessage(error.message);
     } finally {
       setLoading(false);
     }
-  }
+  };
+
+  // Reset form to default values
+  const resetForm = () => {
+    setTitle('');
+    setContent('');
+    setImageUrl('');
+    setImageFile(null);
+    setPreviewUrl('');
+    setErrorMessage('');
+    setCharacterCount(0);
+  };
+
+  // Handle content input and update character count
+  const handleContentChange = (e) => {
+    const newContent = e.target.value;
+    if (newContent.length <= maxCharacters) {
+      setContent(newContent);
+      setCharacterCount(newContent.length);
+    }
+  };
+
+  // Remove image
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setPreviewUrl('');
+    setImageUrl('');
+  };
 
   return (
-    <div className="w-full px-4 py-6 bg-white">
-      <form onSubmit={handleSubmit} className="space-y-5">
-        <div>
-          <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
-            Title
-          </label>
-          <input
-            id="title"
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            required
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500/50"
-            placeholder="Enter title"
-          />
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Error message */}
+      {errorMessage && (
+        <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-md">
+          <div className="flex items-start">
+            <AlertTriangle className="h-5 w-5 text-red-500 mr-2 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-red-700">{errorMessage}</p>
+          </div>
         </div>
-        
-        <div>
-          <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-1">
+      )}
+
+      {/* Title input */}
+      <div>
+        <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
+          Title
+        </label>
+        <input
+          type="text"
+          id="title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Enter an inspiring title..."
+          className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-red-500 focus:border-red-500 shadow-sm"
+          maxLength={100}
+        />
+      </div>
+
+      {/* Content textarea */}
+      <div>
+        <div className="flex justify-between items-center mb-1">
+          <label htmlFor="content" className="block text-sm font-medium text-gray-700">
             Content
           </label>
-          <textarea
-            id="content"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            required
-            rows="4"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500/50"
-            placeholder="Write your spiritual vitamin message here..."
-          />
+          <span className={`text-xs ${characterCount > maxCharacters * 0.9 ? 'text-red-500' : 'text-gray-500'}`}>
+            {characterCount}/{maxCharacters} characters
+          </span>
         </div>
+        <textarea
+          id="content"
+          value={content}
+          onChange={handleContentChange}
+          placeholder="Share your spiritual wisdom..."
+          className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-red-500 focus:border-red-500 shadow-sm min-h-32"
+          rows={6}
+        />
+      </div>
+
+      {/* Image upload */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Image (Optional)
+        </label>
         
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Image
-          </label>
-          
-          {/* Hidden file input */}
-          <input
-            ref={fileInputRef}
-            id="image-upload"
-            type="file"
-            accept="image/*"
-            onChange={handleImageChange}
-            className="hidden"
-          />
-          
-          {/* Drag and drop area or image preview */}
-          {!imagePreview ? (
-            <div 
-              className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
-                dragActive ? 'border-red-400 bg-red-50' : 'border-gray-300 hover:border-red-300 hover:bg-red-50/30'
-              }`}
-              onClick={openFileDialog}
-              onDragEnter={handleDrag}
-              onDragLeave={handleDrag}
-              onDragOver={handleDrag}
-              onDrop={handleDrop}
+        {previewUrl ? (
+          <div className="relative bg-gray-50 rounded-lg overflow-hidden mb-4">
+            <img 
+              src={previewUrl} 
+              alt="Preview" 
+              className="max-h-64 mx-auto object-contain"
+            />
+            <button
+              type="button"
+              onClick={handleRemoveImage}
+              className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm p-1.5 rounded-full text-red-500 hover:bg-red-50 transition-colors shadow-sm"
+              aria-label="Remove image"
             >
-              <Upload className="mx-auto h-10 w-10 text-gray-400" />
-              <p className="mt-2 text-sm text-gray-600">
-                Drag and drop an image here, or click to select
-              </p>
-              <p className="mt-1 text-xs text-gray-500">
-                PNG, JPG, GIF up to 10MB
+              <X size={16} />
+            </button>
+          </div>
+        ) : (
+          <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg">
+            <div className="space-y-2 text-center">
+              <Upload className="mx-auto h-12 w-12 text-gray-400" />
+              <div className="flex text-sm text-gray-600">
+                <label htmlFor="image-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-red-600 hover:text-red-500 focus-within:outline-none">
+                  <span>Upload an image</span>
+                  <input 
+                    id="image-upload" 
+                    name="image-upload" 
+                    type="file" 
+                    className="sr-only" 
+                    accept="image/*"
+                    onChange={handleImageChange}
+                  />
+                </label>
+                <p className="pl-1">or drag and drop</p>
+              </div>
+              <p className="text-xs text-gray-500">
+                PNG, JPG, GIF, WEBP up to 5MB
               </p>
             </div>
+          </div>
+        )}
+      </div>
+
+      {/* Buttons */}
+      <div className="flex justify-end space-x-3 pt-4">
+        <button
+          type="button"
+          onClick={resetForm}
+          className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 font-medium transition-colors"
+          disabled={loading}
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          className="px-5 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-medium rounded-lg shadow-sm transition-colors flex items-center"
+          disabled={loading}
+        >
+          {loading ? (
+            <>
+              <Loader size={18} className="animate-spin mr-2" />
+              Saving...
+            </>
           ) : (
-            <div className="relative rounded-lg overflow-hidden">
-              <img 
-                src={imagePreview} 
-                alt="Preview" 
-                className="w-full h-48 object-cover rounded-md"
-              />
-              <button 
-                type="button"
-                onClick={clearImage}
-                className="absolute top-2 right-2 p-1 bg-white rounded-full shadow-md hover:bg-red-50"
-              >
-                <X size={20} className="text-red-500" />
-              </button>
-            </div>
+            <>
+              <Save size={18} className="mr-2" />
+              {initialData ? 'Update Vitamin' : 'Create Vitamin'}
+            </>
           )}
-        </div>
-        
-        <div className="flex justify-center pt-4">
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 bg-red-500/70 hover:bg-red-600/90 text-white font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50"
-          >
-            {loading 
-              ? (isEditing ? 'Updating...' : 'Creating...') 
-              : (isEditing ? 'Update Spiritual Vitamin' : 'Create Spiritual Vitamin')
-            }
-          </button>
-        </div>
-      </form>
-    </div>
+        </button>
+      </div>
+    </form>
   );
-}
+};
 
 export default CreatePost;

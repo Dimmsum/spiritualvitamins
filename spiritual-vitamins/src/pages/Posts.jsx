@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabaseClient';
 import Header from '../components/Header';
 import SearchBar from '../components/SearchBar';
 import { generateSlug } from '../utils/helpers';
+import { Calendar, Loader, Search, ChevronRight, Image } from 'lucide-react';
 
 const Posts = () => {
   const navigate = useNavigate();
@@ -108,93 +109,159 @@ const Posts = () => {
     navigate(`/vitamins/${vitamin.id}/${slug}`);
   };
 
+  // Calculate content excerpt that's safer than just truncating
+  const getExcerpt = (content, maxLength = 120) => {
+    if (!content) return '';
+    if (content.length <= maxLength) return content;
+    
+    // Find the last space within the maxLength to avoid cutting words
+    const lastSpace = content.substring(0, maxLength).lastIndexOf(' ');
+    return lastSpace === -1 
+      ? content.substring(0, maxLength) + '...' 
+      : content.substring(0, lastSpace) + '...';
+  };
+
   return (
     <>
       <Header />
-      <div className = "bg-[#FF2C2C] pt-10">
-      <div className="mt-10 px-4 pb-10 max-w-6xl mx-auto">
-        <h1 className="text-2xl font-bold text-center text-white">All Your Vitamins</h1>
-        
-        {/* Search bar section */}
-        <div className="mb-8">
-          <SearchBar 
-            value={searchTerm}
-            onChange={handleSearch}
-          />
-        </div>
-        
-        {/* Loading state - only show on initial load */}
-        {loading && page === 0 && (
-          <div className="flex justify-center my-12">
-            <p className="text-gray-500">Loading spiritual vitamins...</p>
+      <div className="bg-gradient-to-b from-red-600 to-red-500 pt-16 pb-32">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-12">
+            <h1 className="text-4xl font-bold text-white mb-4">Spiritual Vitamins</h1>
+            <p className="text-red-100 text-lg max-w-2xl mx-auto">
+              Discover daily doses of spiritual wisdom to nourish your soul
+            </p>
           </div>
-        )}
-        
-        {/* No results message */}
-        {!loading && filteredVitamins.length === 0 && (
-          <div className="text-center my-12">
-            <p className="text-gray-500">No spiritual vitamins found.</p>
-          </div>
-        )}
-        
-        {/* Vitamins grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredVitamins.map(vitamin => (
-            <div 
-              key={vitamin.id} 
-              className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 cursor-pointer"
-              onClick={() => navigateToVitamin(vitamin)}
-            >
-              {vitamin.image_url ? (
-                <div className="w-full h-48 overflow-hidden bg-gray-100">
-                  <img 
-                    src={vitamin.image_url} 
-                    alt={vitamin.title} 
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                    onError={(e) => {
-                      e.target.onerror = null; // Prevent infinite loop
-                      e.target.src = 'https://via.placeholder.com/400x200?text=Image+Not+Found';
-                    }}
-                  />
-                </div>
-              ) : (
-                <div className="w-full h-48 bg-gray-100 flex items-center justify-center">
-                  <span className="text-gray-400">No image</span>
-                </div>
+          
+          {/* Enhanced Search bar section */}
+          <div className="max-w-xl mx-auto relative">
+            <div className="flex items-center bg-white rounded-full shadow-lg overflow-hidden pl-5 pr-2 py-2">
+              <Search className="text-red-400 h-5 w-5" />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={handleSearch}
+                placeholder="Search for spiritual vitamins..."
+                className="w-full border-none outline-none pl-3 py-2 text-gray-700 placeholder-gray-400"
+              />
+              {searchTerm && (
+                <button 
+                  onClick={() => setSearchTerm('')}
+                  className="p-1 rounded-full hover:bg-gray-100"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               )}
-              
-              <div className="p-5">
-                <h2 className="text-xl font-semibold mb-2 text-gray-800">{vitamin.title}</h2>
-                <p className="text-gray-600 mb-4 line-clamp-3">{vitamin.content}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 -mt-24 mb-16">
+        <div className="bg-white rounded-xl shadow-xl p-6 sm:p-8">
+          {/* Loading state - only show on initial load */}
+          {loading && page === 0 && (
+            <div className="flex flex-col items-center justify-center py-16">
+              <Loader className="w-10 h-10 text-red-500 animate-spin mb-4" />
+              <p className="text-gray-500 font-medium">Loading spiritual vitamins...</p>
+            </div>
+          )}
+          
+          {/* No results message */}
+          {!loading && filteredVitamins.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mb-4">
+                <Search className="w-12 h-12 text-red-300" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-700 mb-2">No vitamins found</h3>
+              <p className="text-gray-500 max-w-md">
+                {searchTerm 
+                  ? `No results for "${searchTerm}". Try a different search term.` 
+                  : "There are no spiritual vitamins available at the moment."}
+              </p>
+            </div>
+          )}
+          
+          {/* Vitamins grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredVitamins.map(vitamin => (
+              <div 
+                key={vitamin.id} 
+                className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md border border-gray-100 transition-all duration-300"
+                onClick={() => navigateToVitamin(vitamin)}
+              >
+                {/* Image Section */}
+                <div className="w-full h-56 overflow-hidden bg-gray-50 relative cursor-pointer">
+                  {vitamin.image_url ? (
+                    <img 
+                      src={vitamin.image_url} 
+                      alt={vitamin.title} 
+                      className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
+                      loading="lazy"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = 'https://via.placeholder.com/400x200?text=Image+Not+Found';
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-red-50">
+                      <Image className="w-12 h-12 text-red-200" />
+                    </div>
+                  )}
+                  
+                  {/* Date badge */}
+                  <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-medium text-gray-700 shadow-sm flex items-center">
+                    <Calendar size={12} className="mr-1 text-red-500" />
+                    {formatDate(vitamin.created_at)}
+                  </div>
+                </div>
                 
-                <div className="flex justify-between items-center text-sm text-gray-500">
-                  <span>{formatDate(vitamin.created_at)}</span>
+                {/* Content Section */}
+                <div className="p-5 cursor-pointer">
+                  <h2 className="text-xl font-semibold mb-3 text-gray-800 group-hover:text-red-600 transition-colors">{vitamin.title}</h2>
+                  <p className="text-gray-600 mb-4 text-sm leading-relaxed">{getExcerpt(vitamin.content)}</p>
+                  
+                  <div className="flex justify-between items-center">
+                    <span className="inline-flex items-center text-sm font-medium text-red-600 group-hover:text-red-700 transition-colors">
+                      Read more <ChevronRight size={16} className="ml-1" />
+                    </span>
+                  </div>
                 </div>
               </div>
+            ))}
+          </div>
+          
+          {/* Load more button */}
+          {hasMore && !loading && filteredVitamins.length > 0 && (
+            <div className="mt-12 text-center">
+              <button 
+                onClick={loadMore}
+                className="px-8 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-medium rounded-full shadow-md transition-all duration-300 flex items-center mx-auto"
+              >
+                {loading && page > 0 ? (
+                  <>
+                    <Loader size={18} className="animate-spin mr-2" />
+                    Loading...
+                  </>
+                ) : (
+                  <>Load More Vitamins</>
+                )}
+              </button>
             </div>
-          ))}
+          )}
+          
+          {/* Loading indicator for pagination */}
+          {loading && page > 0 && (
+            <div className="mt-10 text-center">
+              <p className="text-gray-500 flex items-center justify-center">
+                <Loader size={16} className="animate-spin mr-2" />
+                Loading more vitamins...
+              </p>
+            </div>
+          )}
         </div>
-        
-        {/* Load more button */}
-        {hasMore && !loading && filteredVitamins.length > 0 && (
-          <div className="mt-10 text-center">
-            <button 
-              onClick={loadMore}
-              className="px-6 py-2 bg-red-500/70 hover:bg-red-600/90 text-white font-medium rounded-md transition-colors"
-            >
-              Load More Vitamins
-            </button>
-          </div>
-        )}
-        
-        {/* Loading indicator for pagination */}
-        {loading && page > 0 && (
-          <div className="mt-10 text-center">
-            <p className="text-gray-500">Loading more vitamins...</p>
-          </div>
-        )}
-      </div>
       </div>
     </>
   );

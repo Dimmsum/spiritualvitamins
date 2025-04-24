@@ -1,97 +1,133 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { X } from 'lucide-react';
+import { 
+  X, 
+  Home, 
+  Heart, 
+  BookOpen, 
+  User, 
+  Mail, 
+  LogIn,
+  PlusCircle
+} from 'lucide-react';
 
 const Sidebar = ({ isOpen, onClose }) => {
-  // Function to handle clicking a navigation link
-  const handleNavClick = () => {
-    // Close the sidebar when a link is clicked
-    onClose();
-  };
+  // Prevent scrolling when sidebar is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
+  // Close sidebar when escape key is pressed
+  useEffect(() => {
+    const handleEsc = (event) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+    
+    window.addEventListener('keydown', handleEsc);
+    return () => {
+      window.removeEventListener('keydown', handleEsc);
+    };
+  }, [onClose]);
+
+  // Menu links array for easy modification
+  const menuLinks = [
+    { to: '/', label: 'Home', icon: <Home size={20} /> },
+    { to: '/vitamins', label: 'All Vitamins', icon: <BookOpen size={20} /> },
+    { to: '/categories', label: 'Categories', icon: <Heart size={20} /> },
+    { to: '/about', label: 'About Us', icon: <User size={20} /> },
+    { to: '/contact', label: 'Contact', icon: <Mail size={20} /> },
+  ];
+
+  // Admin/Auth links
+  const authLinks = [
+    { to: '/login', label: 'Sign In', icon: <LogIn size={20} /> },
+    { to: '/manage', label: 'Manage Vitamins', icon: <PlusCircle size={20} /> },
+  ];
 
   return (
     <>
-      {/* Invisible overlay for handling outside clicks without darkening the screen */}
+      {/* Overlay */}
       <div 
-        className={`fixed inset-0 z-40 ${
-          isOpen ? 'pointer-events-auto' : 'pointer-events-none'
+        className={`fixed inset-0 bg-black/50 backdrop-blur-sm z-50 transition-opacity duration-300 ${
+          isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
         onClick={onClose}
+        aria-hidden="true"
       />
       
-      {/* Sidebar */}
+      {/* Sidebar Panel */}
       <div 
-        className={`fixed top-0 left-0 h-full w-64 bg-white shadow-lg z-50 transform transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 left-0 bottom-0 w-80 max-w-[80vw] bg-white shadow-xl z-50 transform transition-transform duration-300 ease-in-out ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="flex justify-between items-center p-4 ">
+        {/* Header */}
+        <div className="flex justify-between items-center p-6 border-b border-gray-100">
+          <h2 className="text-xl font-bold text-red-600">Menu</h2>
           <button 
             onClick={onClose}
-            className="p-1 rounded-full hover:bg-gray-100"
+            className="p-2 rounded-full hover:bg-gray-100 text-gray-500"
             aria-label="Close navigation menu"
           >
-            <X size={24} color="#FF2C2C" />
+            <X size={20} />
           </button>
         </div>
         
-        <nav className="px-4 py-6">
-          <ul className="space-y-4">
-            <li>
-              <Link 
-                to="/" 
-                className="block py-2 text-gray-700 hover:text-[#FF2C2C] transition-colors"
-                onClick={handleNavClick}
-              >
-                Home
-              </Link>
-            </li>
-            <li>
-              <Link 
-                to="/vitamins" 
-                className="block py-2 text-gray-700 hover:text-[#FF2C2C] transition-colors"
-                onClick={handleNavClick}
-              >
-                All Vitamins
-              </Link>
-            </li>
-            <li>
-              <Link 
-                to="/about" 
-                className="block py-2 text-gray-700 hover:text-[#FF2C2C] transition-colors"
-                onClick={handleNavClick}
-              >
-                About
-              </Link>
-            </li>
-            <li>
-              <Link 
-                to="/manage-vitamins" 
-                className="block py-2 text-gray-700 hover:text-[#FF2C2C] transition-colors"
-                onClick={handleNavClick}
-              >
-                Manage Vitamins
-              </Link>
-            </li>
+        {/* Main Menu */}
+        <nav className="p-6 overflow-y-auto h-[calc(100%-140px)]">
+          <ul className="space-y-1">
+            {menuLinks.map((link, index) => (
+              <li key={index}>
+                <Link
+                  to={link.to}
+                  className="flex items-center p-3 rounded-lg hover:bg-red-50 text-gray-700 hover:text-red-600 group transition-colors"
+                  onClick={onClose}
+                >
+                  <span className="mr-3 text-gray-500 group-hover:text-red-500">{link.icon}</span>
+                  <span className="font-medium">{link.label}</span>
+                </Link>
+              </li>
+            ))}
           </ul>
+          
+          {/* Divider */}
+          <div className="my-6 border-t border-gray-100" />
+          
+          {/* Auth Links */}
+          <div className="mb-4">
+            <h3 className="text-xs uppercase tracking-wider text-gray-500 font-semibold px-3 mb-2">Account</h3>
+            <ul className="space-y-1">
+              {authLinks.map((link, index) => (
+                <li key={index}>
+                  <Link
+                    to={link.to}
+                    className="flex items-center p-3 rounded-lg hover:bg-red-50 text-gray-700 hover:text-red-600 group transition-colors"
+                    onClick={onClose}
+                  >
+                    <span className="mr-3 text-gray-500 group-hover:text-red-500">{link.icon}</span>
+                    <span className="font-medium">{link.label}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
         </nav>
         
-        <div className="px-4 py-6 border-t mt-auto">
-          <div className="space-y-3">
-            <Link 
-              to="/login" 
-              className="block w-full py-2 text-center rounded-md border border-[#FF2C2C] text-[#FF2C2C] hover:bg-red-50 transition-colors"
-              onClick={handleNavClick}
-            >
-              Login
-            </Link>
-            <Link 
-              to="/signup" 
-              className="block w-full py-2 text-center rounded-md bg-[#FF2C2C] text-white hover:bg-red-600 transition-colors"
-              onClick={handleNavClick}
-            >
-              Sign Up
-            </Link>
+        {/* Footer */}
+        <div className="absolute bottom-0 left-0 right-0 p-6 bg-gray-50 border-t border-gray-100">
+          <div className="flex flex-col">
+            <div className="font-semibold text-gray-800 mb-1">Spiritual Vitamins</div>
+            <div className="text-sm text-gray-500">Nourishing your soul daily</div>
           </div>
         </div>
       </div>
