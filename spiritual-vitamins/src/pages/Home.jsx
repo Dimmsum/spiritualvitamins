@@ -1,15 +1,18 @@
 import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabaseClient";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 import Header from "../components/Header";
 import SearchBar from "../components/SearchBar";
 import Footer from "../components/Footer";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { generateSlug } from "../utils/helpers"; // Import helper for slug generation
 
 const Home = () => {
   const [latestVitamins, setLatestVitamins] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const sliderRef = useRef(null);
+  const navigate = useNavigate(); // Initialize useNavigate
   let startX, startScrollLeft;
 
   useEffect(() => {
@@ -33,6 +36,12 @@ const Home = () => {
       setLoading(false);
     }
   }
+
+  // Function to navigate to a specific post
+  const navigateToPost = (post) => {
+    const slug = generateSlug(post.title);
+    navigate(`/vitamins/${post.id}/${slug}`);
+  };
 
   // Slider navigation functions
   const next = () => {
@@ -147,7 +156,10 @@ const Home = () => {
                     >
                       <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
                         {vitamin.image_url ? (
-                          <div className="h-48 overflow-hidden">
+                          <div 
+                            className="h-48 overflow-hidden cursor-pointer"
+                            onClick={() => navigateToPost(vitamin)}
+                          >
                             <img 
                               src={vitamin.image_url} 
                               alt={vitamin.title} 
@@ -155,17 +167,28 @@ const Home = () => {
                             />
                           </div>
                         ) : (
-                          <div className="bg-gradient-to-r from-red-100 to-red-200 h-48 flex items-center justify-center">
+                          <div 
+                            className="bg-gradient-to-r from-red-100 to-red-200 h-48 flex items-center justify-center cursor-pointer"
+                            onClick={() => navigateToPost(vitamin)}
+                          >
                             <span className="text-2xl text-[#FF2C2C] font-bold">Spiritual Vitamin</span>
                           </div>
                         )}
                         
                         <div className="p-6">
                           <div className="text-sm text-gray-500 mb-2">{formatDate(vitamin.created_at)}</div>
-                          <h3 className="font-bold text-xl mb-3 text-gray-800">{vitamin.title}</h3>
+                          <h3 
+                            className="font-bold text-xl mb-3 text-gray-800 cursor-pointer hover:text-[#FF2C2C]"
+                            onClick={() => navigateToPost(vitamin)}
+                          >
+                            {vitamin.title}
+                          </h3>
                           <p className="text-gray-600 line-clamp-3">{vitamin.content}</p>
                           
-                          <button className="mt-4 text-[#FF2C2C] font-medium hover:underline">
+                          <button 
+                            className="mt-4 text-[#FF2C2C] font-medium hover:underline"
+                            onClick={() => navigateToPost(vitamin)}
+                          >
                             Read More
                           </button>
                         </div>
