@@ -259,56 +259,7 @@ const Home = () => {
         </section>
 
         {/* Featured Categories Section */}
-        <section className="px-4 mb-20">
-          <div className="max-w-6xl mx-auto">
-            <h2 className="text-3xl font-bold text-gray-800 mb-8 relative inline-block">
-              Vitamin Categories
-              <span className="absolute -bottom-2 left-0 w-full h-1 bg-red-500 rounded-full"></span>
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-              <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
-                <div className="w-14 h-14 bg-red-100 rounded-xl flex items-center justify-center text-red-600 mb-4">
-                  <Heart size={24} />
-                </div>
-                <h3 className="font-bold text-xl text-gray-800 mb-2">Motivation</h3>
-                <p className="text-gray-600">Fuel your spirit with daily inspiration to pursue your purpose</p>
-                <button className="mt-4 text-red-600 font-medium flex items-center hover:text-red-700 transition-colors">
-                  Explore <ArrowRight size={16} className="ml-1" />
-                </button>
-              </div>
-              <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
-                <div className="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 mb-4">
-                  <BookOpen size={24} />
-                </div>
-                <h3 className="font-bold text-xl text-gray-800 mb-2">Peace</h3>
-                <p className="text-gray-600">Find inner calm and tranquility amidst life's challenges</p>
-                <button className="mt-4 text-blue-600 font-medium flex items-center hover:text-blue-700 transition-colors">
-                  Explore <ArrowRight size={16} className="ml-1" />
-                </button>
-              </div>
-              <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
-                <div className="w-14 h-14 bg-green-100 rounded-xl flex items-center justify-center text-green-600 mb-4">
-                  <Feather size={24} />
-                </div>
-                <h3 className="font-bold text-xl text-gray-800 mb-2">Growth</h3>
-                <p className="text-gray-600">Expand your mind and nurture personal development</p>
-                <button className="mt-4 text-green-600 font-medium flex items-center hover:text-green-700 transition-colors">
-                  Explore <ArrowRight size={16} className="ml-1" />
-                </button>
-              </div>
-              <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
-                <div className="w-14 h-14 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600 mb-4">
-                  <Brain size={24} />
-                </div>
-                <h3 className="font-bold text-xl text-gray-800 mb-2">Wisdom</h3>
-                <p className="text-gray-600">Gain perspective and insights for navigating life</p>
-                <button className="mt-4 text-purple-600 font-medium flex items-center hover:text-purple-700 transition-colors">
-                  Explore <ArrowRight size={16} className="ml-1" />
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
+       
 
         {/* About Section */}
         <section className="px-4 mb-20">
@@ -320,27 +271,20 @@ const Home = () => {
                   Spiritual Vitamins provides daily doses of inspiration, wisdom, and guidance to nurture your spiritual growth.
                   Created by Flawless Lee, each vitamin is carefully crafted to uplift, encourage, and challenge you on your journey.
                 </p>
-                <button className="inline-flex items-center px-6 py-3 bg-white text-red-600 rounded-full font-medium shadow-md hover:bg-red-50 transition-all duration-300">
+                <a href="/about">
+                <button className="inline-flex items-center px-6 py-3 bg-white text-red-600 rounded-full font-medium shadow-md cursor-pointer hover:bg-red-50 transition-all duration-300">
                   Learn More
                   <ArrowRight size={18} className="ml-2" />
                 </button>
+                </a>
               </div>
               <div className="md:w-1/2 p-12">
                 <div className="text-center md:text-left">
-                  <h3 className="text-2xl font-bold text-gray-800 mb-6">Our Mission</h3>
+                  <h3 className="text-2xl font-bold text-gray-800 mb-6">Mission</h3>
                   <p className="text-gray-600 mb-6">
-                    We believe that spiritual nourishment is as essential as physical nourishment. Our mission is to provide daily spiritual vitamins that strengthen your faith, inspire hope, and cultivate love.
+                    I believe that spiritual nourishment is as essential as physical nourishment. My mission is to provide daily spiritual vitamins that strengthen your faith, inspire hope, and cultivate love.
                   </p>
-                  <div className="grid grid-cols-2 gap-4 mt-8">
-                    <div className="text-center p-4 rounded-lg bg-gray-50">
-                      <div className="text-3xl font-bold text-red-500 mb-1">1000+</div>
-                      <div className="text-gray-600 text-sm">Spiritual Vitamins</div>
-                    </div>
-                    <div className="text-center p-4 rounded-lg bg-gray-50">
-                      <div className="text-3xl font-bold text-red-500 mb-1">5000+</div>
-                      <div className="text-gray-600 text-sm">Inspired Readers</div>
-                    </div>
-                  </div>
+                  
                 </div>
               </div>
             </div>
@@ -415,7 +359,7 @@ const Home = () => {
                 <input 
                   type="email" 
                   placeholder="Your email address" 
-                  className="flex-grow px-5 py-3 rounded-full text-gray-800 outline-none shadow-md"
+                  className="flex-grow px-5 py-3 rounded-full text-gray-800 border-2 border-white outline-none shadow-lg placeholder-white"
                 />
                 <button className="px-6 py-3 bg-white text-red-600 font-medium rounded-full hover:bg-red-50 shadow-md transition-all duration-300">
                   Subscribe Now
